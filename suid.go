@@ -6,7 +6,12 @@ import (
 	"time"
 )
 
-var maxSeq = 1<<10 - 1 //  63 bit(total) - 41 bit(ms) - 12 bit(appId) = 10
+const (
+	appIdBitCount = 12
+	seqBitCount   = 10
+	MaxAppId      = 1<<appIdBitCount - 1 //  63 bit(total) - 41 bit(ms) - 12 bit(appId) = 10
+	MaxSeq        = 1<<seqBitCount - 1   //  63 bit(total) - 41 bit(ms) - 12 bit(appId) = 10
+)
 
 type suid struct {
 	appId     int64
@@ -16,12 +21,12 @@ type suid struct {
 }
 
 func NewSUID(appId int) *suid {
-	if appId >= 2048 {
+	if appId > MaxAppId {
 		panic("App Id cannot be more than 4096")
 	}
 
 	return &suid{
-		appId: int64(appId) << 12,
+		appId: int64(appId) << appIdBitCount,
 		seq:   0,
 	}
 }
@@ -57,8 +62,8 @@ func (s *suid) nextSeq(ms int64) (int64, error) {
 	}
 
 	s.seq++
-	if s.seq > maxSeq {
-		return int64(0), fmt.Errorf("You created more than %d ids in one milisecond", maxSeq)
+	if s.seq > MaxSeq {
+		return int64(0), fmt.Errorf("You created more than %d ids in one milisecond", MaxSeq)
 	}
 
 	s.Unlock()
