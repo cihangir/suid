@@ -52,8 +52,10 @@ func (s *suid) Generate() (int64, error) {
 
 func (s *suid) nextSeq(ms int64) (int64, error) {
 	s.Lock()
+	defer s.Unlock()
+
 	if s.currentMs > ms {
-		return int64(0), fmt.Errorf("Time goes backward in this machine")
+		return int64(0), fmt.Errorf("time goes backward in this machine")
 	}
 
 	if s.currentMs < ms {
@@ -63,9 +65,8 @@ func (s *suid) nextSeq(ms int64) (int64, error) {
 
 	s.seq++
 	if s.seq > MaxSeq {
-		return int64(0), fmt.Errorf("You created more than %d ids in one milisecond", MaxSeq)
+		return int64(0), fmt.Errorf("you created more than %d ids in one milisecond", MaxSeq)
 	}
 
-	s.Unlock()
 	return int64(s.seq), nil
 }
